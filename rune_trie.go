@@ -26,6 +26,10 @@ func (trie *RuneTrie) Get(key string) interface{} {
 	return node.value
 }
 
+func (trie *RuneTrie) ListLeaves(prefix string) map[string]interface{} {
+	return nil
+}
+
 // Put inserts the value into the trie at the given key, replacing any
 // existing items. It returns true if the put adds a new value, false
 // if it replaces an existing value.

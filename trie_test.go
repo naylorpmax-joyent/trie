@@ -2,6 +2,7 @@ package trie
 
 import (
 	"errors"
+	"sort"
 	"testing"
 )
 
@@ -110,6 +111,11 @@ func TestPathTrieWalkPath(t *testing.T) {
 func TestPathTrieWalkPathError(t *testing.T) {
 	trie := NewPathTrie()
 	testTrieWalkPathError(t, trie)
+}
+
+func TestPathTrieListLeaves(t *testing.T) {
+	trie := NewPathTrie()
+	testTrieListLeaves(t, trie)
 }
 
 func testTrie(t *testing.T, trie Trier) {
@@ -381,6 +387,66 @@ func testTrieWalkPath(t *testing.T, trie Trier) {
 	})
 	if !foundRoot {
 		t.Error("did not find root")
+	}
+}
+
+func testTrieListLeaves(t *testing.T, trie Trier) {
+	table := map[string]interface{}{
+		"fish":                        0,
+		"/cat":                        1,
+		"/dog":                        2,
+		"/cats":                       3,
+		"/caterpillar":                4,
+		"/notes":                      30,
+		"/notes/new":                  31,
+		"/notes/new/noise":            32,
+		"/notes/old/noise":            33,
+		"/notes/old/quiet/as/a/mouse": 34,
+	}
+
+	for k, v := range table {
+		trie.Put(k, v)
+	}
+
+	expected := map[string]interface{}{
+		"/notes":                      30,
+		"/notes/new":                  31,
+		"/notes/new/noise":            32,
+		"/notes/old/noise":            33,
+		"/notes/old/quiet/as/a/mouse": 34,
+	}
+
+	actual := trie.ListLeaves("/notes")
+
+	// compare map sizes
+	if len(actual) != len(expected) {
+		t.Errorf("wrong number of leaves, expected: %d, got: %d", len(expected), len(actual))
+	}
+
+	// compare keys
+	actualKeys := make([]string, 0, len(actual))
+	for k := range actual {
+		actualKeys = append(actualKeys, k)
+	}
+	sort.Strings(actualKeys)
+
+	expectedKeys := make([]string, 0, len(expected))
+	for k := range actual {
+		expectedKeys = append(expectedKeys, k)
+	}
+	sort.Strings(expectedKeys)
+
+	for i := range expectedKeys {
+		if expectedKeys[i] != actualKeys[i] {
+			t.Errorf("keys don't match, expected: %s, got: %s", expectedKeys[i], actualKeys[i])
+		}
+	}
+
+	// compare values
+	for k, a := range actual {
+		if e, ok := expected[k]; !ok || e != a {
+			t.Errorf("wrong value at: %s, expected: %d, got: %d", k, e, a)
+		}
 	}
 }
 

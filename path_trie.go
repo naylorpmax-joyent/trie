@@ -58,6 +58,38 @@ func (trie *PathTrie) Get(key string) interface{} {
 	return node.value
 }
 
+func (trie *PathTrie) ListLeaves(prefix string) map[string]interface{} {
+	node := trie
+	for part, i := trie.segmenter(prefix, 0); part != ""; part, i = trie.segmenter(prefix, i) {
+		node = node.children[part]
+		if node == nil {
+			return nil
+		}
+	}
+
+	leaves := make(map[string]interface{})
+	getPathLeaves(prefix, "", node, leaves)
+
+	return leaves
+}
+
+func getPathLeaves(prefix, key string, node *PathTrie, found map[string]interface{}) {
+	if node == nil {
+		return
+	}
+	prefix = prefix + key
+	if node.value != nil {
+		found[prefix] = node.value
+	}
+
+	if node.isLeaf() {
+		return
+	}
+	for key, child := range node.children {
+		getPathLeaves(prefix, key, child, found)
+	}
+}
+
 // Put inserts the value into the trie at the given key, replacing any
 // existing items. It returns true if the put adds a new value, false
 // if it replaces an existing value.
